@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport"
+	content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" />
+<script
+	src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+<script
+	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+<title>ADS File Submission App</title>
+</head>
+<body>
+	<div class="container">
+		<h2>ADS File Submission App</h2>
+		<form class="form-horizontal" enctype="multipart/form-data"
+			id="fileUploadForm" name="fileUploadForm" method="POST">
+			<div class="form-group">
+				<label class="control-label col-sm-2" for="facilityId">Facility
+					Id:</label>
+				<div class="col-sm-10">
+					<input type="text" class="form-control" id="facilityId"
+						placeholder="Enter Facility Id" name="facilityId" required />
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="control-label col-sm-2" for="destinationId">Destination
+					Id:</label>
+				<div class="col-sm-10">
+					<input type="text" class="form-control" id="destinationId"
+						placeholder="Enter Destination Id" name="destinationId" required />
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="control-label col-sm-2" for="reportType">Report
+					Type</label>
+				<div class="col-sm-10">
+					<input type="text" class="form-control" id="reportType"
+						placeholder="Enter Report Type" name="reportType" required />
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="control-label col-sm-2" for="fileName">File
+					Name:</label>
+				<div class="col-sm-10">
+					<input type="text" class="form-control" id="fileName"
+						placeholder="Enter File Name" name="fileName" />
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="file" class="control-label col-sm-2">Choose a
+					file</label>
+				<div class="col-sm-10">
+					<input class="form-control" type="file" id="file" accept=".zip"
+						required /> <span id="fileFormatWarning" data-toggle="tooltip"
+						data-placement="bottom" title="Please upload a zip file"></span>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-10">
+					<button type="submit" class="btn btn-primary" id="submitButton"
+						data-loading-text="<i class=\'fa fa-spinner fa-spin \'></i> Processing Request">Submit</button>
+					<button type="reset" class="btn btn-primary" id="resetButton">Clear</button>
+
+				</div>
+			</div>
+		</form>
+		<!-- 	<div id="progress" class="progress my-3" style="display: none">
+			<div id="progress-bar" class="progress-bar progress-bar-info"
+				role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
+		</div>-->
+
+		<div class="alert" style="display: none" id="resultDiv">
+			<span id="result"></span>
+		</div>
+	</div>
+	<script>
+$('#submitButton').click(function(){
+var destinationId = $("#destinationId").val();
+   $('#fileUploadForm').attr('action', "https://localhost:443/rest/ads/"+destinationId);
+});
+$('#file').change(function() {
+	var filename = $(this).val();
+	var fileExtension = ['zip'];
+	if ($.inArray(filename.split('.').pop().toLowerCase(), fileExtension) == -1) {
+		$('#fileFormatWarning').tooltip('show');
+		$("#submitButton").prop("disabled", true);
+
+	}
+	else {
+		$('#fileFormatWarning').tooltip('hide');
+		$("#submitButton").prop("disabled", false);
+	}
+	var lastIndex = filename.lastIndexOf("\\");
+	if (lastIndex >= 0) {
+		filename = filename.substring(lastIndex + 1);
+	}
+
+	$('#fileName').val(filename);
+});
+
+</script>
+</body>
+
+</html>

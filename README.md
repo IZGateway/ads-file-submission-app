@@ -1,1 +1,32 @@
-# ads-file-submission-app
+# ADS File Submission App
+
+This is sample application that can upload file to IZGateway ADS Restful API. It includes two ways to do the submission.
+
+# Java Program with Apache HttpClient
+
+* Clone the Project to your local.
+* Do a maven install
+
+	Run mvn clean install.
+
+* Create a input json file with inputs such as below,which will sent as argument to the java program.
+	
+	 	{
+	     	"ClientCertificatePFXPath" :"path to pfx cert file",
+		  	"ClientCertificatePFXPassphrase":"passphrase for pfx file",
+			"FacilityId": "",
+			"DestinationId": "",
+			"ReportType": "",
+			"UploadFilePath": ""
+	
+		}
+	
+* Run the program 
+	
+	java -jar target/file-submission-app-java-0.0.1-SNAPSHOT.jar "{path to inputs.json file}"
+
+# HTML Post Form 
+
+* Open fileSubmissionForm.html in the browser and submit the form.
+
+  
