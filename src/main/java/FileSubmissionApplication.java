@@ -1,6 +1,5 @@
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,8 +12,8 @@ import java.security.cert.CertificateException;
 import java.util.Properties;
 import javax.net.ssl.SSLContext;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
@@ -55,20 +54,16 @@ public class FileSubmissionApplication {
 					truststorePassphrase);
 
 			// post request
-			multipartPostRequest(adsRestApi, sslConFactory, jsonObject);
-
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ParseException e) {
+			String response = multipartPostRequest(adsRestApi, sslConFactory, jsonObject);
+			System.out.println(response);
+		} catch (IOException | ParseException e) {
 			e.printStackTrace();
 		}
 	}
 
 	private static SSLConnectionSocketFactory SSLUtil(String ClientCertPath, String keystorePassphrase,
 			InputStream truststoreStream, String truststorePassphrase)
-			throws NoSuchAlgorithmException, CertificateException, FileNotFoundException, IOException,
+			throws NoSuchAlgorithmException, CertificateException, IOException,
 			KeyManagementException, UnrecoverableKeyException, KeyStoreException {
 
 		File pfxFile = new File(ClientCertPath);
@@ -91,65 +86,80 @@ public class FileSubmissionApplication {
 				new NoopHostnameVerifier());
 		truststoreStream.close();
 		keystoreStream.close();
+		// System.out.println("ssl factory created");
 		return sslConFactory;
 
 	}
 
-	private static void multipartPostRequest(String adsRestApi, SSLConnectionSocketFactory sslConFactory,
-			JSONObject jsonObject) throws ClientProtocolException {
+	private static String multipartPostRequest(String adsRestApi, SSLConnectionSocketFactory sslConFactory,
+			JSONObject jsonObject) {
 
+		String response = null;
 		try {
 			String filePath = (String) jsonObject.get("UploadFilePath");
 			String destinationId = (String) jsonObject.get("DestinationId");
 			File file = new File(filePath);
 			FileInputStream fileStream = new FileInputStream(file);
-			
-			System.out.println("Inputs : \n"+ "Facility Id:"+ (String) jsonObject.get("FacilityId") +"\n"+ "Destination Id: "+destinationId+"\n"+"Report Type: "+(String) jsonObject.get("ReportType")+"\n"+"File Location:"+filePath);
+			String facilityId = (String) jsonObject.get("FacilityId");
+			String reportType = (String) jsonObject.get("ReportType");
+			String fileName = file.getName();
+
+			System.out.println("Inputs : \n" + "Facility Id:" + facilityId + "\n" + "Destination Id: " + destinationId
+					+ "\n" + "Report Type: " + reportType + "\n" + "File Name: " + fileName + "\n" + "File Location:"
+					+ filePath);
 
 			CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(sslConFactory).build();
 
-			// build multipart entity with inputs
-			MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
-			entityBuilder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-			entityBuilder.setContentType(ContentType.MULTIPART_FORM_DATA);
-			entityBuilder.addTextBody("facilityId", (String) jsonObject.get("FacilityId"), ContentType.TEXT_PLAIN);
-			entityBuilder.addTextBody("reportType", (String) jsonObject.get("ReportType"), ContentType.TEXT_PLAIN);
-			entityBuilder.addTextBody("filename", file.getName(), ContentType.TEXT_PLAIN);
-			entityBuilder.addBinaryBody("file", fileStream, ContentType.create("application/zip"), file.getName());
+			HttpUriRequest multipartRequest = buildRequest(adsRestApi, facilityId, destinationId, reportType, fileName,
+					fileStream);
 
-			HttpEntity entity = entityBuilder.build();
-			RequestBuilder reqbuilder = RequestBuilder.post(adsRestApi + destinationId);
-
-			// Set the entity object to the RequestBuilder
-			reqbuilder.setEntity(entity);
-
-			// Building the request
-			HttpUriRequest multipartRequest = reqbuilder.build();
 			System.out.println("Processing request " + multipartRequest.getRequestLine() + "... please wait");
 
-			//read the response
-			ResponseHandler<String> responseHandler = response -> {
-				int status = response.getStatusLine().getStatusCode();
-				HttpEntity entityResp = response.getEntity();
-				
-				if (status >= 200 && status < 300) {
-					return entityResp != null ? EntityUtils.toString(entityResp) : null;
-
-				} else {
-					throw new ClientProtocolException(
-							"Error Response from API: " + status + EntityUtils.toString(entityResp));
-				}
-
-			};
 			// Executing the request
-			String httpResponse = httpClient.execute(multipartRequest, responseHandler);
+			HttpResponse httpResponse = httpClient.execute(multipartRequest);
+			response = handleResponse(httpResponse);
 			fileStream.close();
-			System.out.println(httpResponse);
 
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		return response;
+	}
+
+	private static HttpUriRequest buildRequest(String adsRestApi, String facilityId, String destinationId,
+			String reportType, String fileName, FileInputStream fileStream) {
+
+		// build multipart entity with inputs
+		MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
+		entityBuilder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+		entityBuilder.setContentType(ContentType.MULTIPART_FORM_DATA);
+		entityBuilder.addTextBody("facilityId", facilityId, ContentType.TEXT_PLAIN);
+		entityBuilder.addTextBody("reportType", reportType, ContentType.TEXT_PLAIN);
+		entityBuilder.addTextBody("filename", fileName, ContentType.TEXT_PLAIN);
+		entityBuilder.addBinaryBody("file", fileStream, ContentType.create("application/zip"), fileName);
+
+		HttpEntity entity = entityBuilder.build();
+		RequestBuilder reqbuilder = RequestBuilder.post(adsRestApi + destinationId);
+
+		// Set the entity object to the RequestBuilder
+		reqbuilder.setEntity(entity);
+
+		// Building the request
+
+		return reqbuilder.build();
+	}
+
+	public static String handleResponse(HttpResponse response) throws IOException {
+
+		int status = response.getStatusLine().getStatusCode();
+		HttpEntity entityResp = response.getEntity();
+
+		if (status >= 200 && status < 300) {
+			return entityResp != null ? "Success Response code: " + status + "\n"+EntityUtils.toString(entityResp) : null;
+
+		} else {
+			return ("Error Response code: " + status + "\n"+EntityUtils.toString(entityResp));
+		}
+
 	}
 }

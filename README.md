@@ -4,10 +4,11 @@ This is sample application that can upload file to IZGateway ADS Restful API. It
 
 # Java Program with Apache HttpClient
 
-* Clone the Project to your local.
-* Do a maven install
+* Clone the Project to your local. 
+* Run maven install
 
-	Run mvn clean install.
+      	mvn clean install
+
 
 * Create a input json file with inputs such as below,which will sent as argument to the java program.
 	
@@ -23,7 +24,7 @@ This is sample application that can upload file to IZGateway ADS Restful API. It
 	
 * Run the program 
 	
-	java -jar target/file-submission-app-java-0.0.1-SNAPSHOT.jar "{path to inputs.json file}"
+        java -jar target/ads-file-submission-app-0.0.1-SNAPSHOT.jar "{path to inputs.json file}"
 
 # HTML Post Form 
 
