@@ -114,7 +114,8 @@ paths:
       - name: destinationId
         description: >
           The identifier of the destination expected to receive the content.
-            * `izdl` - IZ Datalake. Data sent to this endpoint will be accessible to the CDC IZ Datalake.
+            * `ndlp-izgw-ri` - Destination for routine immunization submissions
+            * `ndlp-izgw-flu` - Destination for influenza submissions
             * `azurite` - A test endpoint. Data sent to this endpoint verifies the ability to transmit a file to IZ Gateway but will be discarded.
         in: path
         schema:
