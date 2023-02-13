@@ -121,7 +121,8 @@ paths:
         schema:
           type: string
           enum:
-          - izdl
+          - ndlp-izgw-ri
+          - ndlp-izgw-flu
           - azurite
         required: true
       - name: X-Message-ID
