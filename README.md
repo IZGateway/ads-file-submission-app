@@ -19,6 +19,7 @@ This is sample application that can upload file to IZGateway ADS Restful API. It
 			"DestinationId": "",
 			"ReportType": "",
 			"UploadFilePath": ""
+			"Period": ""
 	
 		}
 	
