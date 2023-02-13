@@ -12,6 +12,7 @@ import java.security.cert.CertificateException;
 import java.util.Properties;
 import javax.net.ssl.SSLContext;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -24,6 +25,7 @@ import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
@@ -40,7 +42,7 @@ public class FileSubmissionApplication {
 		try {
 			Object obj = jsonParser.parse(new FileReader(args[0]));
 			JSONObject jsonObject = (JSONObject) obj;
-			String ClientCertPath = (String) jsonObject.get("ClientCertificatePFXPath");
+			String clientCertPath = (String) jsonObject.get("ClientCertificatePFXPath");
 			String keyPassphrase = (String) jsonObject.get("ClientCertificatePFXPassphrase");
 			InputStream truststoreStream = FileSubmissionApplication.class.getClassLoader()
 					.getResourceAsStream("ssl/adsTrustStore.jks");
@@ -50,7 +52,7 @@ public class FileSubmissionApplication {
 			String adsRestApi = properties.getProperty("ads.rest.api");
 
 			// ssl context to connect to https
-			SSLConnectionSocketFactory sslConFactory = SSLUtil(ClientCertPath, keyPassphrase, truststoreStream,
+			SSLConnectionSocketFactory sslConFactory = sslUtil(clientCertPath, keyPassphrase, truststoreStream,
 					truststorePassphrase);
 
 			// post request
@@ -61,12 +63,12 @@ public class FileSubmissionApplication {
 		}
 	}
 
-	private static SSLConnectionSocketFactory SSLUtil(String ClientCertPath, String keystorePassphrase,
+	private static SSLConnectionSocketFactory sslUtil(String clientCertPath, String keystorePassphrase,
 			InputStream truststoreStream, String truststorePassphrase)
 			throws NoSuchAlgorithmException, CertificateException, IOException,
 			KeyManagementException, UnrecoverableKeyException, KeyStoreException {
 
-		File pfxFile = new File(ClientCertPath);
+		File pfxFile = new File(clientCertPath);
 		// Loading the keystore with pfx file
 		KeyStore keyStore = KeyStore.getInstance("PKCS12");
 		FileInputStream keystoreStream = new FileInputStream(pfxFile);
@@ -86,7 +88,7 @@ public class FileSubmissionApplication {
 				new NoopHostnameVerifier());
 		truststoreStream.close();
 		keystoreStream.close();
-		// System.out.println("ssl factory created");
+
 		return sslConFactory;
 
 	}
@@ -95,30 +97,30 @@ public class FileSubmissionApplication {
 			JSONObject jsonObject) {
 
 		String response = null;
-		try {
-			String filePath = (String) jsonObject.get("UploadFilePath");
-			String destinationId = (String) jsonObject.get("DestinationId");
-			File file = new File(filePath);
-			FileInputStream fileStream = new FileInputStream(file);
-			String facilityId = (String) jsonObject.get("FacilityId");
-			String reportType = (String) jsonObject.get("ReportType");
-			String fileName = file.getName();
+        String filePath = (String) jsonObject.get("UploadFilePath");
+        String destinationId = (String) jsonObject.get("DestinationId");
+        String period = (String)jsonObject.get("Period");
+        File file = new File(filePath);
+        String facilityId = (String) jsonObject.get("FacilityId");
+        String reportType = (String) jsonObject.get("ReportType");
+        String fileName = file.getName();
 
-			System.out.println("Inputs : \n" + "Facility Id:" + facilityId + "\n" + "Destination Id: " + destinationId
-					+ "\n" + "Report Type: " + reportType + "\n" + "File Name: " + fileName + "\n" + "File Location:"
-					+ filePath);
+        System.out.println("Inputs : \nFacility Id:" + facilityId + "\nDestination Id: " + destinationId
+                + "\nPeriod:" + period + "\nReport Type: " + reportType + "\nFile Name: " + fileName + "\nFile Location:"
+                + filePath);
+		try(        
+		    FileInputStream fileStream = new FileInputStream(file);
+            CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(sslConFactory).build();
+		) {
 
-			CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(sslConFactory).build();
-
-			HttpUriRequest multipartRequest = buildRequest(adsRestApi, facilityId, destinationId, reportType, fileName,
-					fileStream);
+			HttpUriRequest multipartRequest = 
+			    buildRequest(adsRestApi, facilityId, destinationId, period, reportType, fileName, fileStream);
 
 			System.out.println("Processing request " + multipartRequest.getRequestLine() + "... please wait");
 
 			// Executing the request
 			HttpResponse httpResponse = httpClient.execute(multipartRequest);
 			response = handleResponse(httpResponse);
-			fileStream.close();
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -126,8 +128,9 @@ public class FileSubmissionApplication {
 		return response;
 	}
 
-	private static HttpUriRequest buildRequest(String adsRestApi, String facilityId, String destinationId,
-			String reportType, String fileName, FileInputStream fileStream) {
+	private static HttpUriRequest buildRequest(String adsRestApi, String facilityId, String destinationId, 
+	    String period, String reportType, String fileName, FileInputStream fileStream
+	) {
 
 		// build multipart entity with inputs
 		MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
@@ -135,8 +138,9 @@ public class FileSubmissionApplication {
 		entityBuilder.setContentType(ContentType.MULTIPART_FORM_DATA);
 		entityBuilder.addTextBody("facilityId", facilityId, ContentType.TEXT_PLAIN);
 		entityBuilder.addTextBody("reportType", reportType, ContentType.TEXT_PLAIN);
+		entityBuilder.addTextBody("period", period, ContentType.TEXT_PLAIN);
 		entityBuilder.addTextBody("filename", fileName, ContentType.TEXT_PLAIN);
-		entityBuilder.addBinaryBody("file", fileStream, ContentType.create("application/zip"), fileName);
+		entityBuilder.addBinaryBody("file", fileStream, getContentType(fileName), fileName);
 
 		HttpEntity entity = entityBuilder.build();
 		RequestBuilder reqbuilder = RequestBuilder.post(adsRestApi + destinationId);
@@ -149,7 +153,18 @@ public class FileSubmissionApplication {
 		return reqbuilder.build();
 	}
 
-	public static String handleResponse(HttpResponse response) throws IOException {
+	private static ContentType getContentType(String fileName) {
+        if (fileName.endsWith(".zip")) {
+            return ContentType.create("application/zip");
+        } else if (fileName.endsWith(".xslx")) {
+            return ContentType.create("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        } else if (fileName.endsWith(".xsl")) {
+            return ContentType.create("application/vnd.ms-excel");
+        }
+        return ContentType.create("application/zip");
+    }
+
+    public static String handleResponse(HttpResponse response) throws IOException {
 
 		int status = response.getStatusLine().getStatusCode();
 		HttpEntity entityResp = response.getEntity();
