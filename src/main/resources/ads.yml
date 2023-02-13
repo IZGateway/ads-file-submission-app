@@ -1,0 +1,312 @@
+openapi: 3.0.0
+info:
+  title: ADS API Specification
+  description: This is the API for the IZ Gateway 1.4 Automated Data Submission Service
+  contact:
+    name: Audacious Inquiry
+    email: izgateway@cdc.gov
+  version: 1.4.0
+servers:
+  - url: https://dev.phiz-project.org
+    description: Onboarding Environment
+  - url: https://prod.phiz-project.org
+    description: Production Environment
+components:
+  schemas:
+    MetadataResponse:
+      type: object
+      properties: 
+        meta_destination_id:
+          type: string
+          description: The destination identifier for the submission.
+        meta_ext_period:
+          type: string
+          description: The period associated with the submission, date, month or quarter, in YYYY-MM-DD, YYYY-MM, or YYYYQ# format.
+        meta_ext_source:
+          type: string
+          description: The source of the submission. Fixed to IZGW.
+        meta_ext_sourceversion:
+          type: string
+          description: The version of the protocol supported by the destination endpoint. Fixed to V2022-12-31 
+        meta_ext_event:
+          type: string
+          description: The type of submission (RoutineImmunization or Influenza)
+        meta_ext_entity:
+          type: string
+          description: The identifier for the submitting entity (a.k.a. FacilityID)
+        meta_username:
+          type: string
+          format: X.509 Distinguished Name
+          description: The principal associated with the sender's certificate iin X.509 format.
+        meta_filename:
+          type: string
+          description: The name of the file submitted.
+        meta_ext_objectkey:
+          type: string
+          format: uuid
+          description: The unique key for the object (a.k.a. MessageID).
+        meta_ipaddress:
+          description: The IP Address of the submitting system
+          format: ipAddress
+        meta_filesize:
+          type: integer
+          description: The size of the uploaded file.
+        meta_uploaded_timestamp:
+          type: integer
+          description: The Unix timestamp for the upload.     
+        
+    ErrorResponse:
+      type: object
+      properties:
+        eventId:
+            type: string
+            description: The IZ Gateway unique event id for this request used to correlate this event in diagnostic logs. Report this identifier in error reports submitted to izgateway@cdc.gov 
+        message: 
+            type: string
+            description: The complete description of the error.
+        code:
+            type: string
+            description: The error code associated with the error.
+        summary:
+            type: string
+            description: A brief description of the error used for aggregating metrics.
+        diagnostics:
+            type: string
+            description: Diagnostics appropriate for correcting the problem.
+        detail:
+            type: string
+            description: Specific exception detail.
+        retryStrategy:
+            type: string
+            description: >
+                The retry strategy
+                  * `NORMAL`: Apply normal message retry strategy (e.g., wait a minute and try again, if that fails wait longer, and if that fails try much later). 
+                  * `CORRECT_MESSAGE`: Correct the message before sending again. 
+                  * `CONTACT_SUPPORT`: Contact IZ Gateway support via mailto:izgateway@cdc.gov for assistance. 
+                  * `CHECK_IIS_STATUS`: Check the status of the destination (see https://status.izgateway.org) 
+            enum:
+              - NORMAL 
+              - CORRECT_MESSAGE 
+              - CONTACT_SUPPORT 
+              - CHECK_IIS_STATUS 
+      example: {
+        "message": "Error in Request: Required request parameter 'reportType' for method parameter type String is not present",
+        "code": "003",
+        "summary": "Error in Request",
+        "diagnostics": null,
+        "detail": "Required request parameter 'reportType' for method parameter type String is not present",
+        "retryStrategy": "CORRECT_MESSAGE",
+        "faultName": "MissingServletRequestParameterException"
+      }
+paths:
+  //{host}:{port}/rest/ads/{destinationId}:
+    parameters:
+      - name: host
+        in: path
+        schema:
+          type: string
+        required: true
+      - name: port
+        in: path
+        schema:
+          type: string
+        required: true
+      - name: destinationId
+        description: >
+          The identifier of the destination expected to receive the content.
+            * `izdl` - IZ Datalake. Data sent to this endpoint will be accessible to the CDC IZ Datalake.
+            * `azurite` - A test endpoint. Data sent to this endpoint verifies the ability to transmit a file to IZ Gateway but will be discarded.
+        in: path
+        schema:
+          type: string
+          enum:
+          - izdl
+          - azurite
+        required: true
+      - name: X-Message-ID
+        in: header
+        description: A unique message identifier used to track the transmission. If this or one of the following omitted, a random UUID will be generated by IZ Gateway. 
+        schema:
+          type: string
+          format: uuid
+          description: Message IDs and their alternatives below are expected to be provided in UUID format, but IZ Gateway will accept any string as a message ID.
+        required: false                    
+      - name: X-Correlation-ID
+        in: header
+        description: Alternative to X-Message-ID (the preferred header field). 
+        schema:
+          type: string
+          format: uuid
+        required: false                    
+      - name: X-Request-ID
+        in: header
+        description: Another alternative to X-Message-ID (the preferred header field). 
+        schema:
+          type: string
+          format: uuid
+        required: false  
+    post:
+      tags:
+        - default
+      summary: Send a file to the selected destination
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [ "facilityId", "file", "reportType" ]
+              properties:
+                facilityId:
+                  description: The identifier for the jurisdiction or facility sending data. Typically the two letter state abbreviation followed by A. Assigned by the IZ Datalake team to each jurisdiction.  
+                  type: string
+                  example: MAA
+                filename:
+                  description: The filename to use for this submission. Can be used to override the filename supplied by a web browser when using a file form component.
+                  type: string
+                  example: MAA_16M.zip
+                file:
+                  description: The file to send to the destination. This should be a zipped up file containing the components of the Routine Immunization or Influenza reports.
+                  type: string
+                  format: binary
+                reportType:
+                  type: string
+                  enum:
+                  - RoutineImmunization
+                  - Influenza
+                  description: >
+                    The type of report to send.
+                      * `RoutineImmunization` - A routine immunization report. Typically send quarterly by jurisdictions.
+                      * `Influenza` - An influenza report. Typically send monthly by jurisdictions.
+                
+      responses:
+        '200':
+          description: Successful response. The content of this response contains a copy of the metadata that is transmitted to the IZ Datalake (or the test endpoint).
+          content:
+            application/json: 
+              schema:
+                type: object
+                properties: 
+                  destinationId:
+                    type: string
+                    description: The destination identifier for the submission.
+                  meta_ext_source:
+                    type: string
+                    description: The source of the submission. Fixed to IZGW.
+                  meta_ext_sourceversion:
+                    type: string
+                    description: The version of the protocol supported by the destination endpoint. Fixed to V2022-12-31 
+                  meta_ext_event:
+                    type: string
+                    description: The type of submission (RoutineImmunization or Influenza)
+                  meta_ext_entity:
+                    type: string
+                    description: The identifier for the submitting entity (a.k.a. FacilityID)
+                  meta_username:
+                    type: string
+                    format: X.509 Distinguished Name
+                    description: The principal associated with the sender's certificate iin X.509 format.
+                  meta_filename:
+                    type: string
+                    description: The name of the file submitted.
+                  meta_ext_objectkey:
+                    type: string
+                    format: uuid
+                    description: The unique key for the object (a.k.a. MessageID).
+                  meta_ipaddress:
+                    description: The IP Address of the submitting system
+                    format: ipAddress
+                  meta_filesize:
+                    type: integer
+                    description: The size of the uploaded file.
+                  meta_uploadedDate:
+                    type: integer
+                    description: The Unix timestamp for the upload. 
+                    
+                example: {
+                    destinationId": "azurite",
+                    "meta_ext_source": "IZGW",
+                    "meta_ext_sourceversion": "V2022-12-31",
+                    "meta_ext_event": "RoutineImmunization",
+                    "meta_ext_entity": "MAA",
+                    "meta_username": "CN=kboone.testing.izgateway.org, O=Audacious Inquiry LLC, L=Baltimore, ST=MaryLand, C=US",
+                    "meta_filename": "MAA_16M.zip",
+                    "meta_ext_objectkey": "MyMessageId",
+                    "meta_ipaddress": "127.0.0.1",
+                    "meta_filesize": 1781578,
+                    "meta_uploaded_date": 1671695735138
+                }
+        '400':
+          description: Invalid request. The request needs to be corrected before sending again.
+          content:
+            application/json: 
+              schema:
+                type: object
+                
+                example: {
+                  "message": "Error in Request: Required request parameter 'reportType' for method parameter type String is not present",
+                  "code": "003",
+                  "summary": "Error in Request",
+                  "diagnostics": null,
+                  "detail": "Required request parameter 'reportType' for method parameter type String is not present",
+                  "retryStrategy": "CORRECT_MESSAGE",
+                  "faultName": "MissingServletRequestParameterException"
+                }
+
+                properties:
+                  eventId:
+                    type: string
+                    description: The IZ Gateway unique event id for this request used to correlate this event in diagnostic logs. Report this identifier in error reports submitted to izgateway@cdc.gov 
+                  message: 
+                    type: string
+                    description: The complete description of the error.
+                  code:
+                    type: string
+                    description: The error code associated with the error.
+                  summary:
+                    type: string
+                    description: A brief description of the error used for aggregating metrics.
+                  diagnostics:
+                    type: string
+                    description: Diagnostics appropriate for correcting the problem.
+                  detail:
+                    type: string
+                    description: Specific exception detail.
+                  retryStrategy:
+                    type: string
+                    description: >
+                      The retry strategy
+                        * `NORMAL`: Apply normal message retry strategy (e.g., wait a minute and try again, if that fails wait longer, and if that fails try much later). 
+                        * `CORRECT_MESSAGE`: Correct the message before sending again. 
+                        * `CONTACT_SUPPORT`: Contact IZ Gateway support via mailto:izgateway@cdc.gov for assistance. 
+                        * `CHECK_IIS_STATUS`: Check the status of the destination (see https://status.izgateway.org) 
+
+                    enum:
+                      - NORMAL 
+                      - CORRECT_MESSAGE 
+                      - CONTACT_SUPPORT 
+                      - CHECK_IIS_STATUS 
+
+        '404':
+          description: Destination was not found. Correct the destinationId in the URL.
+          content:
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An error occured in the IZ Gateway application.  Contact support via izgateway@cdc.gov.
+          content:
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Destination returned an invalid response.
+          content:
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: The request could not be completed at this time. The request can be reattempted at a later time.   
+          content:
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/ErrorResponse'
