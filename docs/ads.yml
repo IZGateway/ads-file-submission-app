@@ -113,18 +113,8 @@ components:
               - CHECK_IIS_STATUS 
 
 paths:
-  //{host}:{port}/rest/ads/{destinationId}:
+  /rest/ads/{destinationId}:
     parameters:
-      - name: host
-        in: path
-        schema:
-          type: string
-        required: true
-      - name: port
-        in: path
-        schema:
-          type: string
-        required: true
       - name: destinationId
         description: >
           The identifier of the destination expected to receive the content.
@@ -191,12 +181,12 @@ paths:
                 reportType:
                   type: string
                   enum:
-                  - RoutineImmunization
-                  - Influenza
+                  - routineImmunization
+                  - influenzaVaccination
                   description: >
                     The type of report to send.
-                      * `RoutineImmunization` - A routine immunization report. Typically send quarterly by jurisdictions.
-                      * `Influenza` - An influenza report. Typically send monthly by jurisdictions.
+                      * `routineImmunization` - A routine immunization report. Typically send quarterly by jurisdictions.
+                      * `influenzaVaccination` - An influenza report. Typically send monthly by jurisdictions.
                 
       responses:
         '200':
