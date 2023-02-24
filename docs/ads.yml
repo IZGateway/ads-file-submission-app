@@ -7,10 +7,10 @@ info:
     email: izgateway@cdc.gov
   version: 1.4.0
 servers:
+  - url: https://izgateway-dev-nlb-e9941b47428f1e12.elb.us-east-1.amazonaws.com
+    description: Development Environment
   - url: https://dev.phiz-project.org
     description: Onboarding Environment
-  - url: https://prod.phiz-project.org
-    description: Production Environment
 components:
   schemas:
     MetadataResponse:
