@@ -7,28 +7,30 @@ info:
     email: izgateway@cdc.gov
   version: 1.4.0
 servers:
+  - url: https://izgateway-dev-nlb-e9941b47428f1e12.elb.us-east-1.amazonaws.com
+    description: Development Environment
   - url: https://dev.phiz-project.org
     description: Onboarding Environment
-  - url: https://prod.phiz-project.org
-    description: Production Environment
 components:
   schemas:
     MetadataResponse:
       type: object
       example: {
-        destinationId": "azurite",
-        "meta_ext_source": "IZGW",
-        "meta_ext_sourceversion": "V2022-12-31",
-        "meta_ext_event": "RoutineImmunization",
-        "meta_ext_entity": "MAA",
-        "meta_username": "CN=kboone.testing.izgateway.org, O=Audacious Inquiry LLC, L=Baltimore, ST=MaryLand, C=US",
-        "meta_ext_filename": "MAA_16M.zip",
-        "meta_ext_objectkey": "MyMessageId",
-        "meta_ext_submissionperiod": "2023Q1",
-        "meta_ipaddress": "127.0.0.1",
-        "meta_filesize": 1781578,
-        "meta_uploaded_date": 1671695735138
-      }        
+          "meta_destination_id": "azurite",
+          "meta_ext_submissionperiod": "2023Q1",
+          "meta_ext_source": "IZGW",
+          "meta_ext_sourceversion": "V2022-12-31",
+          "meta_ext_event": "routineImmunization",
+          "meta_ext_entity": "MAA",
+          "meta_username": "CN=kboone.testing.izgateway.org, O=Audacious Inquiry LLC, L=Baltimore, ST=MaryLand, C=US",
+          "meta_ext_filename": "RIA_16M.zip",
+          "meta_ext_objectkey": "Write Submission MAA/routineImmuniziation/MAA_16M.zip/2023Q1/RIA_16M.zip with Normalization of Inputs (trimming, capitaliization)",
+          "meta_ipaddress": "24.241.16.31",
+          "meta_path": "https://127.0.0.1:10000/devstoreaccount1/izgw/2023Q1/MAA/20230301/RIA_16M.zip",
+          "meta_schema_version": "1.0",
+          "meta_filesize": 1781578,
+          "meta_uploaded_timestamp": "Wed, 01 Mar 2023 21:24:59 UTC"
+      }       
       properties: 
         meta_destination_id:
           type: string
@@ -59,15 +61,25 @@ components:
           type: string
           format: uuid
           description: The unique key for the object (a.k.a. MessageID).
+        meta_schema_version:
+          type: string
+          description: The schema version for the metadata.
+          enum:
+          - "1.0"
+        meta_uploaded_timestamp:
+          type: string
+          description: The timestamp for the uploaded data, an IZ Gateway extension to metadata.
+          format: "EEE, dd MMM yyyy HH:mm:ss zzz"
         meta_ipaddress:
-          description: The IP Address of the submitting system
+          description: The IP Address of the submitting system, an IZ Gateway extension to metadata.
           format: ipAddress
         meta_filesize:
           type: integer
-          description: The size of the uploaded file.
-        meta_uploaded_timestamp:
-          type: integer
-          description: The Unix timestamp for the upload.     
+          description: The size of the uploaded file, an IZ Gateway extension to metadata.
+        meta_path:
+          type: string
+          description: The destination path, an IZ Gateway extension to metadata.
+          
     ErrorResponse:
       type: object
       example: {
