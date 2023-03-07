@@ -22,8 +22,9 @@ components:
         "meta_ext_event": "RoutineImmunization",
         "meta_ext_entity": "MAA",
         "meta_username": "CN=kboone.testing.izgateway.org, O=Audacious Inquiry LLC, L=Baltimore, ST=MaryLand, C=US",
-        "meta_filename": "MAA_16M.zip",
+        "meta_ext_filename": "MAA_16M.zip",
         "meta_ext_objectkey": "MyMessageId",
+        "meta_ext_submissionperiod": "2023Q1",
         "meta_ipaddress": "127.0.0.1",
         "meta_filesize": 1781578,
         "meta_uploaded_date": 1671695735138
@@ -31,8 +32,7 @@ components:
       properties: 
         meta_destination_id:
           type: string
-          # TBD, should this really be fixed to NDLP?
-          description: The destination identifier for the submission.  Fixed to NDLP? 
+          description: The destination identifier for the submission.  Fixed to NDLP 
         meta_ext_submissionperiod:
           type: string
           description: The period associated with the submission, date, month or quarter, in YYYYQ#, YYYY-MMM, or YYYY-MM-DD format.
@@ -44,7 +44,7 @@ components:
           description: The version of the protocol supported by the destination endpoint. Fixed to V2022-12-31 
         meta_ext_event:
           type: string
-          description: The type of submission (RoutineImmunization or Influenza)
+          description: The type of submission (RoutineImmunization or InfluenzaVaccination)
         meta_ext_entity:
           type: string
           description: The identifier for the submitting entity (a.k.a. FacilityID)
@@ -71,6 +71,7 @@ components:
     ErrorResponse:
       type: object
       example: {
+        "eventId": "33",
         "message": "Error in Request: Required request parameter 'reportType' for method parameter type String is not present",
         "code": "003",
         "summary": "Error in Request",
@@ -178,6 +179,9 @@ paths:
                   description: The file to send to the destination. This should be a zipped up file containing the components of the Routine Immunization or Influenza reports.
                   type: string
                   format: binary
+                period:
+                  description: The period associated with the report.  Should be in YYYYQ# format, or YYYY-MMM format.  E.g., 2023Q1 or 2023-FEB
+                  type: string
                 reportType:
                   type: string
                   enum:
