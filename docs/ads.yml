@@ -177,7 +177,7 @@ paths:
           multipart/form-data:
             schema:
               type: object
-              required: [ "facilityId", "file", "reportType" ]
+              required: [ "facilityId", "file", "period", "reportType" ]
               properties:
                 facilityId:
                   description: The identifier for the jurisdiction or facility sending data. Typically the two letter state abbreviation followed by A. Assigned by the IZ Datalake team to each jurisdiction.  
