@@ -16,7 +16,8 @@ components:
     MetadataResponse:
       type: object
       example: {
-          "meta_destination_id": "azurite",
+          "meta_route_id": "azurite",
+          "meta_destination_id": "ndlp",
           "meta_ext_submissionperiod": "2023Q1",
           "meta_ext_source": "IZGW",
           "meta_ext_sourceversion": "V2022-12-31",
@@ -32,9 +33,12 @@ components:
           "meta_uploaded_timestamp": "Wed, 01 Mar 2023 21:24:59 UTC"
       }       
       properties: 
+        meta_route_id:
+          type: string
+          description: The route used to access the destination. Same as input {destinationId} value.
         meta_destination_id:
           type: string
-          description: The destination identifier for the submission.  Fixed to NDLP 
+          description: The destination identifier for the submission.  Fixed to ndlp 
         meta_ext_submissionperiod:
           type: string
           description: The period associated with the submission, date, month or quarter, in YYYYQ#, YYYY-MMM, or YYYY-MM-DD format.
@@ -126,11 +130,11 @@ components:
               - CHECK_IIS_STATUS 
 
 paths:
-  /rest/ads/{destinationId}:
+  /rest/ads/{routeId}:
     parameters:
-      - name: destinationId
+      - name: routeId
         description: >
-          The identifier of the destination expected to receive the content.
+          The identifier of the route used to send the content.
             * `ndlp-izgw-ri` - Destination for routine immunization submissions
             * `ndlp-izgw-flu` - Destination for influenza submissions
             * `azurite` - A test endpoint for Phase 1 (ndlp). Data sent to this endpoint verifies the ability to transmit a file to IZ Gateway but will be discarded.
@@ -219,7 +223,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Destination was not found. Correct the destinationId in the URL.
+          description: No destination found for the route. Correct the routeId in the URL.
           content:
             application/json: 
               schema: 
