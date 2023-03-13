@@ -16,7 +16,6 @@ components:
     MetadataResponse:
       type: object
       example: {
-          "meta_route_id": "azurite",
           "meta_destination_id": "ndlp",
           "meta_ext_submissionperiod": "2023Q1",
           "meta_ext_source": "IZGW",
@@ -26,16 +25,15 @@ components:
           "meta_username": "CN=kboone.testing.izgateway.org, O=Audacious Inquiry LLC, L=Baltimore, ST=MaryLand, C=US",
           "meta_ext_filename": "RIA_16M.zip",
           "meta_ext_objectkey": "Write Submission MAA/routineImmuniziation/MAA_16M.zip/2023Q1/RIA_16M.zip with Normalization of Inputs (trimming, capitaliization)",
-          "meta_ipaddress": "24.241.16.31",
-          "meta_path": "https://127.0.0.1:10000/devstoreaccount1/izgw/2023Q1/MAA/20230301/RIA_16M.zip",
           "meta_schema_version": "1.0",
-          "meta_filesize": 1781578,
-          "meta_uploaded_timestamp": "Wed, 01 Mar 2023 21:24:59 UTC"
+          "izgw_route_id": "azurite",
+          "izgw_route_type": "V2022-12-31",
+          "izgw_ipaddress": "24.241.16.31",
+          "izgw_path": "https://127.0.0.1:10000/devstoreaccount1/izgw/2023Q1/MAA/20230301/RIA_16M.zip",
+          "izgw_filesize": 1781578,
+          "izgw_uploaded_timestamp": "Wed, 01 Mar 2023 21:24:59 UTC"
       }       
       properties: 
-        meta_route_id:
-          type: string
-          description: The route used to access the destination. Same as input {destinationId} value.
         meta_destination_id:
           type: string
           description: The destination identifier for the submission.  Fixed to ndlp 
@@ -70,17 +68,26 @@ components:
           description: The schema version for the metadata.
           enum:
           - "1.0"
-        meta_uploaded_timestamp:
+        izgw_route_id:
+          type: string
+          description: The route used to access the destination. Same as input {destinationId} value.
+        izgw_route_type:
+          type: string
+          description: The type of route used to access the destination.
+          enum:
+          - "ndlp"
+          - "dex"
+        izgw_uploaded_timestamp:
           type: string
           description: The timestamp for the uploaded data, an IZ Gateway extension to metadata.
           format: "EEE, dd MMM yyyy HH:mm:ss zzz"
-        meta_ipaddress:
+        izgw_ipaddress:
           description: The IP Address of the submitting system, an IZ Gateway extension to metadata.
           format: ipAddress
-        meta_filesize:
+        izgw_filesize:
           type: integer
           description: The size of the uploaded file, an IZ Gateway extension to metadata.
-        meta_path:
+        izgw_path:
           type: string
           description: The destination path, an IZ Gateway extension to metadata.
           
