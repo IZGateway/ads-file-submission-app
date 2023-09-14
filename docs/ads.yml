@@ -7,7 +7,7 @@ info:
     email: izgateway@cdc.gov
   version: 1.4.0
 servers:
-  - url: https://izgateway-dev-nlb-e9941b47428f1e12.elb.us-east-1.amazonaws.com
+  - url: https://dev.izgateway.org
     description: Development Environment
   - url: https://dev.phiz-project.org
     description: Onboarding Environment
@@ -146,7 +146,7 @@ paths:
             * `ndlp-izgw-flu` - Destination for influenza submissions
             * `azurite` - A test endpoint for Phase 1 (ndlp). Data sent to this endpoint verifies the ability to transmit a file to IZ Gateway but will be discarded.
             * `dex-dev` - A test endpoint for Phase 2 (DEX). Data sent to this endpoint verifies the ability to transmit a file to IZ Gateway but will be discarded.
-            * `dex-stg` - Destination for submissions through (DEX), currently only supporting routing immunization submissions.
+            * `dex` - Destination for submissions through (DEX), currently only supporting routing immunization submissions.
         in: path
         schema:
           type: string
@@ -155,7 +155,7 @@ paths:
           - ndlp-izgw-flu
           - azurite
           - dex-dev
-          - dex-stg
+          - dex
         required: true
       - name: X-Message-ID
         in: header
