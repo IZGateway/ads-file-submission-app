@@ -19,7 +19,7 @@ components:
           "meta_destination_id": "ndlp",
           "meta_ext_submissionperiod": "2023Q1",
           "meta_ext_source": "IZGW",
-          "meta_ext_sourceversion": "V2022-12-31",
+          "meta_ext_sourceversion": "V2023-09-01",
           "meta_ext_event": "routineImmunization",
           "meta_ext_entity": "MAA",
           "meta_username": "CN=kboone.testing.izgateway.org, O=Audacious Inquiry LLC, L=Baltimore, ST=MaryLand, C=US",
@@ -45,7 +45,7 @@ components:
           description: The source of the submission. Fixed to IZGW.
         meta_ext_sourceversion:
           type: string
-          description: The version of the protocol supported by the destination endpoint. Fixed to V2022-12-31 
+          description: The version of the protocol supported by the destination endpoint. Fixed to V2023-09-01 
         meta_ext_event:
           type: string
           description: The type of submission (RoutineImmunization or InfluenzaVaccination)
@@ -210,11 +210,16 @@ paths:
                   enum:
                   - routineImmunization
                   - influenzaVaccination
+                  - rsvPrevention
+                  - covidallMonthlyVaccination
+                  - covidbridgeMonthlyVaccination
                   description: >
                     The type of report to send.
                       * `routineImmunization` - A routine immunization report. Typically send quarterly by jurisdictions.
                       * `influenzaVaccination` - An influenza report. Typically send monthly by jurisdictions.
-                
+                      * `rsvPrevention` - For RSV files
+                      * `covidallmonthlyVaccination` - For COVID monthly aggregate files containing all vaccinations
+                      * `covidbridgeVaccination` - For COVID vaccinations done under the Bridge program only                
       responses:
         '200':
           description: Successful response. The content of this response contains a copy of the metadata that is transmitted to the IZ Datalake (or the test endpoint).
