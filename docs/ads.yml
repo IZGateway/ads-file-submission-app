@@ -7,10 +7,10 @@ info:
     email: izgateway@cdc.gov
   version: 1.4.0
 servers:
-  - url: https://dev.izgateway.org
-    description: Development Environment
   - url: https://dev.phiz-project.org
     description: Onboarding Environment
+  - url: https://dev.izgateway.org
+    description: Development Environment
 components:
   schemas:
     MetadataResponse:
@@ -193,7 +193,7 @@ paths:
                   type: string
                   example: MAA_16M.zip
                 file:
-                  description: The file to send to the destination. This should be a zipped up file containing the components of the Routine Immunization or Influenza reports.
+                  description: The file to send to the destination. This should be a file containing the quarterly (in zip format) or monthly reports (in csv format).  
                   type: string
                   format: binary
                 period:
