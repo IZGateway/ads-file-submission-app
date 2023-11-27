@@ -137,6 +137,14 @@ components:
               - CHECK_IIS_STATUS 
 
 paths:
+  /rest/submitFile:
+    get:
+      summary: Get a page enabling manual submission of data
+      description: |+
+        **Role**\: Admin, ADS
+        
+        Display an HTML Form enabling users to manually upload and submit a file.
+        
   /rest/ads/{routeId}:
     parameters:
       - name: routeId
