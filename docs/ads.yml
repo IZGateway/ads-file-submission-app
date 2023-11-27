@@ -29,6 +29,7 @@ components:
           "izgw_route_id": "dex",
           "izgw_route_type": "V2023-09-01",
           "izgw_ipaddress": "24.241.16.31",
+          "izgw_event_id": "165001224217.33",
           "izgw_path": "https://127.0.0.1:10000/devstoreaccount1/izgw/2023Q1/MAA/20230301/RIA_16M.zip",
           "izgw_filesize": 1781578,
           "izgw_uploaded_timestamp": "Wed, 01 Mar 2023 21:24:59 UTC"
@@ -87,6 +88,11 @@ components:
         izgw_filesize:
           type: integer
           description: The size of the uploaded file, an IZ Gateway extension to metadata.
+          
+        izgw_event_id:
+          type: string
+          description: The event id associated with this submission.
+          
         izgw_path:
           type: string
           description: The destination path, an IZ Gateway extension to metadata.
@@ -94,7 +100,7 @@ components:
     ErrorResponse:
       type: object
       example: {
-        "eventId": "33",
+        "eventId": "165001224217.33",
         "message": "Error in Request: Required request parameter 'reportType' for method parameter type String is not present",
         "code": "003",
         "summary": "Error in Request",
