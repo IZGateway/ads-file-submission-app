@@ -208,7 +208,7 @@ paths:
                   example: MAA_16M.zip
                 file:
                   description: The file to send to the destination. This should be a file containing the quarterly (in zip format) or monthly reports (in csv format).  
-                  type: string
+                  type: file
                   format: binary
                 period:
                   description: The period associated with the report.  Should be in YYYYQ# format, or YYYY-MMM format.  E.g., 2023Q1 or 2023-FEB
@@ -220,7 +220,7 @@ paths:
                   - influenzaVaccination
                   - rsvPrevention
                   - covidallMonthlyVaccination
-                  - covidbridgeMonthlyVaccination
+                  - covidbridgeVaccination
                   description: >
                     The type of report to send.
                       * `routineImmunization` - A routine immunization report. Typically send quarterly by jurisdictions.
